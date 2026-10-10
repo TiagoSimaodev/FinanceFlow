@@ -1,223 +1,278 @@
-gi# FinanceFlow
+# FinanceFlow — Gestão Financeira Pessoal
 
-Aplicação web de finanças pessoais para registrar receitas e despesas, importar extratos CSV, acompanhar indicadores e visualizar a evolução financeira. O projeto foi estruturado para execução local com SQLite e implantação serverless no Vercel com PostgreSQL.
+Aplicação web de finanças pessoais desenvolvida com Python e Flask, com foco em organização financeira, processamento de dados, consultas analíticas e visualização de indicadores.
 
-> **Estado do produto:** cadastro, login, movimentações, importação CSV, dashboard e exportações estão implementados. A tabela de metas existe no schema, mas a interface e as operações de metas ainda não foram implementadas.
+**Status: Em produção e em utilização.**
+
+🌐 **Acesse a aplicação:** https://finance-flow-gt3d.vercel.app/
+
+O FinanceFlow permite registrar receitas e despesas, importar extratos financeiros em CSV, acompanhar indicadores em um dashboard interativo e exportar movimentações para CSV e Excel. A aplicação utiliza SQLite no ambiente local e PostgreSQL no ambiente de produção, hospedado com deploy serverless na Vercel.
+
+O projeto também explora práticas de organização em camadas, validação de dados, isolamento entre usuários, integridade referencial, consultas analíticas no banco de dados e automação de tarefas de processamento.
+
+---
 
 ## Sumário
 
+- [Demonstração](#demonstração)
 - [Funcionalidades](#funcionalidades)
-- [Tecnologias e arquitetura](#tecnologias-e-arquitetura)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Fluxo dos dados](#fluxo-dos-dados)
+- [Tecnologias](#tecnologias)
+- [Arquitetura](#arquitetura)
+- [Fluxo de processamento de dados](#fluxo-de-processamento-de-dados)
 - [Modelo de dados](#modelo-de-dados)
-- [Instalação e execução local](#instalação-e-execução-local)
-- [Configuração](#configuração)
-- [Importação CSV](#importação-csv)
-- [Dashboard e exportações](#dashboard-e-exportações)
+- [Dashboard e indicadores](#dashboard-e-indicadores)
+- [Importação e qualidade dos dados](#importação-e-qualidade-dos-dados)
 - [API](#api)
+- [Segurança e integridade](#segurança-e-integridade)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Execução local](#execução-local)
+- [Configuração por ambiente](#configuração-por-ambiente)
 - [Testes](#testes)
-- [Deploy no Vercel](#deploy-no-vercel)
-- [Segurança e limitações conhecidas](#segurança-e-limitações-conhecidas)
+- [Deploy e produção](#deploy-e-produção)
+- [Limitações conhecidas](#limitações-conhecidas)
+- [Licença](#licença)
+
+---
+
+## Demonstração
+
+**Aplicação em produção:** https://finance-flow-gt3d.vercel.app/
+
+O sistema está publicado e sendo utilizado. A implantação permite executar a aplicação em ambiente de produção com banco de dados PostgreSQL gerenciado, separando a persistência dos dados do ambiente serverless da Vercel.
+
+A aplicação foi desenvolvida para oferecer um fluxo integrado entre cadastro financeiro, processamento de arquivos, persistência relacional e visualização de indicadores.
 
 ## Funcionalidades
 
-- Cadastro e login com e-mail e senha.
+### Gestão financeira
+
+- Cadastro e autenticação de usuários por e-mail e senha.
 - Registro de receitas e despesas em reais.
-- Categorias predefinidas: Moradia, Alimentação, Transporte, Lazer, Água, Luz, Internet, Cartão de crédito, Carro, Moto, Compras do mês, Telefone, Streaming e Salário.
-- Histórico filtrável por data, tipo e categoria.
-- Dashboard com totais do mês, saldo do período, taxa de economia, variação mensal de despesas e gráficos.
-- Alternância entre tema claro e escuro, com preferência guardada no navegador.
-- Importação de CSV por mês ou ano, com validação, deduplicação, histórico e motivos de rejeição.
-- Download de gráficos em PNG e exportação das movimentações filtradas em CSV e Excel (`.xlsx`).
-- Isolamento dos dados por usuário autenticado.
+- Histórico de movimentações com filtros por data, tipo e categoria.
+- Categorias financeiras predefinidas.
+- Isolamento das movimentações por usuário autenticado.
+- Alternância entre temas claro e escuro, com preferência armazenada no navegador.
 
-## Tecnologias e arquitetura
+### Processamento e importação de dados
 
-| Camada | Tecnologia | Responsabilidade |
-| --- | --- | --- |
-| Interface | HTML, CSS e JavaScript | Páginas responsivas, formulários, filtros e interação |
-| Gráficos | Chart.js 4 | Visualizações no navegador |
-| Aplicação web | Flask | Rotas, autenticação, validação e composição da aplicação |
-| Dados tabulares | Pandas | Leitura e normalização dos arquivos CSV importados |
-| Banco local | SQLite | Desenvolvimento e testes locais |
-| Banco de produção | PostgreSQL | Persistência em implantação no Vercel |
-| Excel | openpyxl | Criação de arquivos `.xlsx` |
-| Testes | unittest | Testes de integração e regras de negócio |
+- Importação de extratos financeiros em CSV.
+- Leitura e normalização de dados tabulares com Pandas.
+- Validação de colunas, datas, valores, categorias e períodos.
+- Identificação de registros inválidos, duplicados ou fora do período selecionado.
+- Registro dos motivos de rejeição para facilitar a análise dos dados.
+- Histórico dos lotes de importação, incluindo status, contagens e duração.
+- Identificação de arquivos previamente importados por meio de hash SHA-256.
 
-As rotas HTTP delegam validações e operações a serviços, que usam repositórios para acessar o banco. A camada de conexão abstrai diferenças entre SQLite e PostgreSQL, mantendo parâmetros SQL portáveis no código da aplicação. Consultas analíticas e agregações do dashboard são executadas no banco.
+### Análise e visualização
 
-## Estrutura do projeto
+- Dashboard financeiro com indicadores mensais.
+- Gráficos de evolução das receitas e despesas.
+- Distribuição de despesas por categoria.
+- Comparação de despesas entre períodos.
+- Exportação de movimentações filtradas para CSV e Excel.
+- Download dos gráficos em formato PNG.
+
+### Categorias disponíveis
+
+Moradia, Alimentação, Transporte, Lazer, Água, Luz, Internet, Cartão de crédito, Carro, Moto, Compras do mês, Telefone, Streaming e Salário.
+
+## Tecnologias
+
+| Tecnologia | Aplicação no projeto |
+|---|---|
+| Python | Lógica de negócio, validação e processamento |
+| Flask | Backend, rotas HTTP e composição da aplicação |
+| SQL | Consultas, agregações e persistência relacional |
+| PostgreSQL | Banco de dados do ambiente de produção |
+| SQLite | Banco de dados local e ambiente de testes |
+| Pandas | Leitura, padronização e validação de arquivos CSV |
+| HTML, CSS e JavaScript | Interface e interações do usuário |
+| Chart.js 4 | Visualização gráfica dos indicadores |
+| openpyxl | Geração de arquivos Excel `.xlsx` |
+| Werkzeug | Hash seguro de senhas |
+| unittest | Testes automatizados |
+| Vercel | Hospedagem e execução serverless |
+| Neon | PostgreSQL gerenciado para produção |
+| Git e GitHub | Versionamento e manutenção do código |
+
+## Arquitetura
+
+A aplicação foi organizada em camadas para separar responsabilidades e facilitar manutenção, testes e evolução do sistema.
+
+**Interface → Rotas → Serviços → Repositórios → Banco de dados**
+
+- **Interface:** formulários, filtros, dashboard e interação com o usuário.
+- **Rotas:** recebem requisições HTTP, aplicam controles de acesso e encaminham operações.
+- **Serviços:** concentram regras de negócio, validações e processamento.
+- **Repositórios:** encapsulam consultas e operações de persistência.
+- **Camada de conexão:** abstrai diferenças entre SQLite e PostgreSQL.
+- **Banco de dados:** mantém usuários, movimentações, categorias e registros de importação.
+
+A aplicação utiliza uma factory `create_app()` para construir a instância Flask e aplicar as configurações do ambiente.
+
+A camada de persistência mantém compatibilidade com os dois bancos utilizados no projeto. As consultas e agregações do dashboard são executadas no banco de dados, evitando depender exclusivamente do processamento no navegador.
+
+A arquitetura pode ser representada pelo seguinte fluxo:
 
 ```text
-.
-├── app.py                           # Entrada Flask usada localmente e pelo Vercel
-├── pyproject.toml                    # Metadados e dependências do projeto
-├── requirements.txt                  # Dependências instaladas pelo Vercel
-├── README.md
-├── public/
-│   └── static/                       # Assets servidos no Vercel
-├── src/
-│   └── financeflow/
-│       ├── __init__.py               # Factory create_app e configuração HTTP
-│       ├── config.py                 # Configuração por ambiente
-│       ├── db/
-│       │   ├── connection.py         # Conexões e inicialização do schema
-│       │   ├── schema.sql            # Schema SQLite
-│       │   └── schema_postgresql.sql # Schema PostgreSQL
-│       ├── repositories/             # Consultas e persistência
-│       ├── routes/                   # Endpoints e páginas Flask
-│       ├── services/                 # Regras de negócio e processamento
-│       ├── templates/                # Templates Jinja/HTML
-│       └── static/                   # CSS e JavaScript da aplicação
-└── tests/                            # Testes automatizados
+Usuário
+   |
+   v
+Interface Web
+HTML / CSS / JavaScript
+   |
+   v
+Rotas Flask / API
+   |
+   v
+Serviços de negócio
+   |
+   +--------------------+
+   |                    |
+   v                    v
+Repositórios       Pandas
+   |             Processamento
+   v                 de CSV
+Camada de conexão
+   |
+   +--------------------+
+   |                    |
+   v                    v
+SQLite local       PostgreSQL
+                   Produção
 ```
 
-`public/static` contém cópias dos assets necessários à configuração estática do Vercel. Ao alterar CSS ou JavaScript servido pela aplicação, mantenha as cópias correspondentes sincronizadas.
+## Fluxo de processamento de dados
 
-## Fluxo dos dados
+### 1. Cadastro manual
 
-### Cadastro manual
+1. O usuário envia uma movimentação pela interface.
+2. O JavaScript encaminha os dados à API Flask.
+3. O serviço valida tipo, data, valor, descrição e categoria.
+4. O valor monetário é convertido para centavos inteiros.
+5. O repositório grava a movimentação associada ao usuário autenticado.
+6. O histórico e o dashboard consultam os registros persistidos.
 
-1. A pessoa envia uma movimentação pelo formulário.
-2. O JavaScript envia os campos para a API Flask.
-3. O serviço valida tipo, data, valor, descrição e correspondência entre tipo e categoria.
-4. O valor decimal é convertido para centavos inteiros.
-5. O repositório grava a movimentação associada ao usuário da sessão.
-6. O histórico e o dashboard consultam os dados persistidos no banco.
+### 2. Importação de extratos CSV
 
-### Importação CSV
+1. O usuário seleciona o período e envia um arquivo.
+2. A aplicação valida tamanho, codificação, estrutura e conteúdo.
+3. O Pandas lê e padroniza os dados tabulares.
+4. As linhas são verificadas conforme as regras de negócio.
+5. Os registros válidos são persistidos no banco de dados.
+6. As linhas rejeitadas são registradas com o conteúdo original e o motivo da rejeição.
+7. O lote de importação recebe informações de processamento, contagens e status.
+8. As movimentações importadas passam a compor o histórico e os indicadores financeiros.
 
-1. A pessoa escolhe o escopo mensal ou anual e envia o arquivo.
-2. O pipeline valida tamanho, codificação, colunas e conteúdo.
-3. Pandas lê e padroniza os dados de entrada.
-4. Cada linha válida é carregada no banco; linhas rejeitadas mantêm o conteúdo original e o motivo.
-5. O lote registra status, contagens e duração. O hash SHA-256 do arquivo impede importar novamente o mesmo conteúdo para a mesma conta.
-6. As movimentações importadas passam a alimentar o histórico e os indicadores como os registros manuais.
+O sistema utiliza SHA-256 para identificar arquivos já importados pela mesma conta, evitando o reprocessamento do mesmo conteúdo.
+
+### 3. Consulta e análise
+
+Os dados persistidos alimentam consultas SQL utilizadas nos indicadores e gráficos. Os filtros selecionados controlam os registros apresentados nas visualizações e nas exportações, respeitando as permissões do usuário autenticado.
 
 ## Modelo de dados
 
-O schema cria as seguintes entidades:
+O schema relacional contempla as seguintes entidades:
 
-- **`users`**: identidade, e-mail, nome e versão da sessão.
-- **`password_credentials`**: hash da senha, separado da identidade.
-- **`password_recovery_codes`**: hash do código de recuperação de uso único.
-- **`categories`**: categorias compartilhadas, identificadas por nome e tipo.
-- **`transactions`**: movimentações, valor em centavos, data, descrição, categoria, proprietário e origem.
-- **`import_batches`**: histórico e métricas de cada arquivo processado.
-- **`import_rejections`**: linha original e motivo de cada rejeição.
-- **`goals`**: estrutura inicial para metas financeiras; ainda sem fluxo de interface/API.
+| Entidade | Responsabilidade |
+|---|---|
+| `users` | Identidade, e-mail, nome e versão da sessão |
+| `password_credentials` | Armazenamento de hashes de credenciais |
+| `password_recovery_codes` | Códigos de recuperação armazenados por hash |
+| `categories` | Categorias financeiras e seus tipos |
+| `transactions` | Receitas e despesas dos usuários |
+| `import_batches` | Histórico e métricas dos lotes importados |
+| `import_rejections` | Linhas rejeitadas e respectivos motivos |
+| `goals` | Estrutura inicial para futuras funcionalidades de metas |
 
-As chaves estrangeiras e restrições protegem a integridade referencial. Há índices para consultas por usuário/data, categoria, tipo e lote de importação. O par categoria/tipo garante que uma receita não seja gravada com uma categoria exclusiva de despesa.
+### Integridade e representação monetária
 
-Valores são persistidos em centavos inteiros (`R$ 12,34` = `1234`) para evitar erros de ponto flutuante. Datas são validadas no formato ISO `AAAA-MM-DD`; SQLite as armazena como texto e PostgreSQL como `DATE`.
+- Chaves estrangeiras e restrições para preservar a integridade referencial.
+- Índices para consultas por usuário, data, categoria, tipo e lote.
+- Validação da compatibilidade entre categoria e tipo de movimentação.
+- Valores monetários armazenados como centavos inteiros para evitar imprecisões de ponto flutuante.
+- Datas validadas no formato ISO `AAAA-MM-DD`.
+- Consultas de dados privados restringidas ao usuário autenticado.
 
-## Instalação e execução local
+Exemplo de representação monetária:
 
-Requisitos: Python 3.10 ou superior e pip. No Windows, abra o PowerShell na pasta do projeto:
-
-```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -e .
+```text
+R$ 12,34 → 1234 centavos
 ```
 
-Se não quiser ativar o ambiente virtual, use o executável diretamente:
+No SQLite, as datas são armazenadas como texto; no PostgreSQL, são utilizadas colunas do tipo `DATE`.
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install -e .
-.\.venv\Scripts\python.exe -m flask --app app run --debug
-```
+## Dashboard e indicadores
 
-Inicie o servidor:
+O dashboard apresenta informações financeiras do período selecionado.
 
-```powershell
-python -m flask --app app run --debug
-```
+| Indicador | Regra de cálculo |
+|---|---|
+| Receitas | Soma das receitas do período |
+| Despesas | Soma das despesas do período |
+| Saldo líquido | Receitas − despesas |
+| Taxa de economia | (Receitas − despesas) / Receitas |
+| Variação das despesas | Comparação com o mês anterior |
+| Evolução financeira | Receitas e despesas dos últimos seis meses |
+| Distribuição por categoria | Agrupamento das despesas por categoria |
 
-Abra `http://127.0.0.1:5000`. Na primeira inicialização, a aplicação cria `instance\financeflow.db`, o schema e as categorias predefinidas. Não são inseridas movimentações financeiras fictícias.
+Os cálculos são baseados nos dados persistidos. Quando não existe uma base válida para determinada comparação, o sistema retorna um valor nulo em vez de apresentar uma porcentagem enganosa.
 
-Para confirmar que a aplicação está respondendo:
+Os gráficos são construídos com Chart.js e podem ser baixados em PNG. As exportações CSV e Excel respeitam os filtros de movimentações selecionados.
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/health
-```
+O arquivo Excel inclui cabeçalho, filtros automáticos, datas formatadas e valores numéricos em reais.
 
-O resultado esperado é `status: ok`. Se a porta 5000 estiver ocupada, escolha outra, por exemplo `--port 5055`.
+## Importação e qualidade dos dados
 
-## Configuração
+A importação CSV é um dos componentes centrais do projeto, combinando tratamento tabular, regras de validação e persistência estruturada.
 
-| Variável | Obrigatória | Descrição |
-| --- | --- | --- |
-| `SECRET_KEY` | No Vercel | Segredo usado para assinar sessões Flask. Em desenvolvimento local, se omitido, é gerado um segredo temporário novo em cada inicialização. |
-| `DATABASE_URL` | No Vercel | URL de conexão PostgreSQL. |
-| `POSTGRES_URL` | Alternativa | URL PostgreSQL usada quando `DATABASE_URL` não estiver definida. |
-| `FINANCEFLOW_DATABASE` | Não | Caminho para um arquivo SQLite local alternativo. |
-| `VERCEL` | Definida pela plataforma | Quando igual a `1`, ativa configuração serverless, cookie seguro e limite de upload reduzido. |
-
-Gere um segredo localmente no PowerShell:
-
-```powershell
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-Nunca inclua valores secretos ou URLs de banco em arquivos versionados. O `.gitignore` exclui o banco local, ambiente virtual e artefatos Python.
-
-## Importação CSV
-
-A tela **Importar CSV** permite importar por mês ou ano. O limite é 5 MB localmente e 4 MB no Vercel. Os modelos baixáveis usam o cabeçalho:
+### Formato esperado
 
 ```csv
 data;tipo;valor;categoria;descricao
-10/10/2026;despesa;1.234,56;Alimentação;Compras do mês
+10/10/2026;despesa;1234,56;Alimentação;Compras do mês
 2026-10-10;receita;3500.00;Salário;Pagamento
 ```
 
-- `data`: `AAAA-MM-DD` ou `DD/MM/AAAA`.
-- `tipo`: `receita` ou `despesa`.
-- `valor`: valor positivo, com até duas casas decimais; aceita decimal com vírgula ou ponto.
-- `categoria`: nome de categoria já existente e compatível com o tipo.
-- `descricao`: opcional.
+### Regras de validação
 
-Linhas inválidas, fora do período selecionado ou repetidas dentro do arquivo não são descartadas silenciosamente: ficam registradas no lote com o conteúdo original e o motivo da rejeição. Importar o mesmo conteúdo novamente para a mesma conta retorna HTTP `409`.
+- Datas nos formatos `AAAA-MM-DD` ou `DD/MM/AAAA`.
+- Tipos permitidos: `receita` e `despesa`.
+- Valores positivos com até duas casas decimais.
+- Valores decimais com vírgula ou ponto.
+- Categorias existentes e compatíveis com o tipo de movimentação.
+- Verificação do período selecionado.
+- Detecção de linhas duplicadas no arquivo.
+- Registro das rejeições para permitir rastreabilidade do processamento.
+- Limite de 5 MB em execução local e 4 MB no ambiente Vercel.
 
-## Dashboard e exportações
+A aplicação diferencia registros aceitos e rejeitados, evitando descartar silenciosamente informações que não atendem às regras de negócio.
 
-O Dashboard mostra os indicadores do mês selecionado:
-
-- Receitas, despesas e saldo líquido (`receitas - despesas`).
-- Percentual economizado: `(receitas - despesas) / receitas`.
-- Variação das despesas em relação ao mês anterior.
-- Evolução de receitas e despesas nos últimos seis meses.
-- Distribuição mensal por categoria.
-
-As somas e agrupamentos usam movimentações persistidas. Os filtros de tipo e categoria controlam os gráficos; os cards mantêm os totais completos do período. Percentuais sem base de comparação são retornados como `null`.
-
-Cada gráfico pode ser baixado em PNG. Os botões **Baixar CSV** e **Baixar Excel** exportam as movimentações do mês e aplicam os filtros de tipo/categoria selecionados. O Excel inclui data formatada, valores numéricos em reais, cabeçalho fixo e filtro automático. Exportações são geradas somente com registros do usuário autenticado.
+A importação do mesmo conteúdo pela mesma conta retorna HTTP 409.
 
 ## API
 
-Páginas privadas e APIs de dados exigem sessão autenticada. Sem sessão válida, as páginas redirecionam para login e endpoints de API retornam HTTP `401`. Operações de escrita são protegidas por CSRF.
+As páginas privadas e as APIs de dados exigem sessão autenticada. Os endpoints de escrita são protegidos por CSRF.
 
 | Método | Rota | Descrição |
-| --- | --- | --- |
-| `GET`, `POST` | `/login` | Página e autenticação por e-mail/senha |
-| `GET`, `POST` | `/register` | Cadastro de conta |
-| `GET`, `POST` | `/forgot-password` | Redefinição de senha com código de recuperação |
-| `POST` | `/auth/logout` | Encerrar sessão |
-| `GET` | `/api/me` | Identidade da sessão atual |
-| `GET` | `/api/health` | Verificação de saúde da aplicação |
-| `GET` | `/api/categories?type=despesa` | Categorias, opcionalmente filtradas por tipo |
-| `GET`, `POST` | `/api/transactions` | Consultar ou cadastrar movimentações |
-| `GET` | `/api/dashboard?month=AAAA-MM` | Indicadores e dados dos gráficos |
-| `GET` | `/api/dashboard/export?format=csv&month=AAAA-MM` | Baixar CSV do período/filtros |
-| `GET` | `/api/dashboard/export?format=xlsx&month=AAAA-MM` | Baixar Excel do período/filtros |
-| `GET`, `POST` | `/api/imports` | Consultar histórico ou importar CSV |
-| `GET` | `/api/imports/template?period_type=month&period=AAAA-MM` | Baixar modelo de CSV |
-| `GET` | `/api/imports/{id}/rejections` | Consultar rejeições de um lote próprio |
+|---|---|---|
+| GET, POST | `/login` | Página e autenticação |
+| GET, POST | `/register` | Cadastro de usuários |
+| GET, POST | `/forgot-password` | Fluxo de recuperação de senha |
+| POST | `/auth/logout` | Encerramento da sessão |
+| GET | `/api/me` | Identidade da sessão atual |
+| GET | `/api/health` | Verificação de saúde da aplicação |
+| GET | `/api/categories` | Consulta de categorias |
+| GET, POST | `/api/transactions` | Consulta e cadastro de movimentações |
+| GET | `/api/dashboard` | Indicadores e dados dos gráficos |
+| GET | `/api/dashboard/export` | Exportação CSV ou XLSX |
+| GET, POST | `/api/imports` | Histórico e importação de arquivos |
+| GET | `/api/imports/template` | Download de modelo CSV |
+| GET | `/api/imports/{id}/rejections` | Consulta das rejeições de um lote próprio |
 
-Exemplo de `POST /api/transactions`:
+### Exemplo de requisição
+
+`POST /api/transactions`
 
 ```json
 {
@@ -229,49 +284,176 @@ Exemplo de `POST /api/transactions`:
 }
 ```
 
-O identificador da categoria deve ser obtido em `GET /api/categories`; o exemplo não presume que o ID seja fixo. Valores inválidos retornam HTTP `400` com mensagem no campo `error`.
+O identificador da categoria deve ser obtido pela API de categorias; o valor apresentado é ilustrativo.
+
+A aplicação valida os dados recebidos e retorna HTTP 400 quando a requisição contém valores inválidos. Endpoints privados sem sessão válida retornam HTTP 401.
+
+## Segurança e integridade
+
+O projeto implementa controles de segurança voltados à proteção de contas e movimentações financeiras.
+
+- Senhas armazenadas com hash seguro via Werkzeug.
+- Códigos de recuperação armazenados por hash SHA-256.
+- Códigos de recuperação de uso único.
+- Invalidação de sessões existentes após redefinição de senha.
+- Proteção CSRF nas operações de escrita.
+- Cookies de sessão `HttpOnly`, `SameSite=Lax` e `Secure` em produção.
+- Sessões com duração de sete dias.
+- Isolamento das movimentações por usuário autenticado.
+- Validação de entradas e restrições de integridade no banco.
+- Segredos e credenciais configurados por variáveis de ambiente.
+
+Os arquivos exportados podem conter informações financeiras e devem ser armazenados e compartilhados com cuidado.
+
+## Estrutura do projeto
+
+```text
+FinanceFlow/
+├── app.py
+├── pyproject.toml
+├── requirements.txt
+├── README.md
+├── public/
+│   └── static/
+├── src/
+│   └── financeflow/
+│       ├── __init__.py
+│       ├── config.py
+│       ├── db/
+│       │   ├── connection.py
+│       │   ├── schema.sql
+│       │   └── schema_postgresql.sql
+│       ├── repositories/
+│       ├── routes/
+│       ├── services/
+│       ├── templates/
+│       └── static/
+└── tests/
+```
+
+`public/static/` contém cópias dos assets utilizados pela configuração estática da Vercel. Alterações em CSS e JavaScript servidos pela aplicação devem manter essas cópias sincronizadas, conforme a configuração atual do projeto.
+
+## Execução local
+
+### Requisitos
+
+- Python 3.10 ou superior.
+- pip.
+- Git, para clonar o repositório.
+
+### Instalação
+
+No Windows, abra o PowerShell na pasta do projeto:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+Inicie a aplicação:
+
+```powershell
+python -m flask --app app run --debug
+```
+
+Acesse:
+
+http://127.0.0.1:5000
+
+Na primeira inicialização, a aplicação cria o banco SQLite local, aplica o schema e registra as categorias predefinidas. Não são inseridas movimentações financeiras fictícias.
+
+### Verificação de saúde
+
+Com o servidor em execução:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/health
+```
+
+O resultado esperado é um status `ok`.
+
+## Configuração por ambiente
+
+| Variável | Obrigatória | Finalidade |
+|---|---|---|
+| `SECRET_KEY` | Sim em produção | Assinatura segura das sessões Flask |
+| `DATABASE_URL` | Sim em produção | URL de conexão PostgreSQL |
+| `POSTGRES_URL` | Alternativa | URL PostgreSQL quando `DATABASE_URL` não está definida |
+| `FINANCEFLOW_DATABASE` | Não | Caminho alternativo para o SQLite local |
+| `VERCEL` | Definida pela plataforma | Ativa configurações específicas de produção |
+
+Para gerar uma chave secreta localmente, com Python instalado:
+
+```powershell
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Nunca versione segredos, senhas ou URLs de conexão com credenciais. Em produção, utilize as variáveis de ambiente configuradas na plataforma de hospedagem.
 
 ## Testes
 
-Execute a suíte completa no ambiente virtual:
+O projeto utiliza `unittest` para validar regras de negócio e integração.
+
+Execute a suíte de testes:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-Os testes usam bancos SQLite temporários e cobrem autenticação, CSRF, isolamento de contas, restrições e inicialização do schema, filtros, indicadores, importações, rejeições e downloads CSV/Excel.
+Os testes utilizam bancos SQLite temporários e cobrem funcionalidades como:
 
-## Deploy no Vercel
+- Autenticação e proteção CSRF.
+- Isolamento de contas.
+- Integridade e inicialização do schema.
+- Filtros e indicadores financeiros.
+- Importação de CSV e registros rejeitados.
+- Exportações CSV e Excel.
 
-O projeto usa `app.py` como entrada Flask. O filesystem da função Vercel não é persistente; portanto, SQLite não deve ser usado em produção.
+Os testes automatizados ajudam a verificar o comportamento da aplicação durante alterações e correções.
 
-1. Envie o projeto para um repositório Git e importe-o no Vercel.
-2. Use a raiz do repositório como **Root Directory**. Deixe o build preset Python/Flask ser detectado pelo `app.py`.
-3. Conecte um PostgreSQL gerenciado pelo Vercel Marketplace ou outro serviço PostgreSQL acessível.
-4. Nas variáveis de ambiente de Production e Preview, configure:
-   - `DATABASE_URL`: URL PostgreSQL.
-   - `SECRET_KEY`: segredo aleatório forte, igual entre instâncias do mesmo ambiente.
-5. Faça o deploy e confirme `https://SEU-DOMINIO/api/health`.
+## Deploy e produção
 
-No Vercel, a aplicação exige `DATABASE_URL` ou `POSTGRES_URL` e `SECRET_KEY`. O schema e as categorias são inicializados na inicialização da aplicação. Isso **não migra automaticamente** os registros de um arquivo SQLite local para o PostgreSQL.
+O FinanceFlow está publicado na Vercel e utiliza PostgreSQL gerenciado pelo Neon para persistência dos dados em produção.
 
-O `.vercelignore` exclui testes, ambiente virtual e banco local do pacote de deploy. `requirements.txt` lista as dependências usadas para instalação na plataforma.
+**URL de produção:** https://finance-flow-gt3d.vercel.app/
 
-## Segurança e limitações conhecidas
+A configuração utiliza:
 
-- As senhas são armazenadas com hash seguro via Werkzeug; não são persistidas em texto puro.
-- O cadastro **não verifica o controle do endereço de e-mail**. O e-mail é um identificador da conta, não um fator de recuperação.
-- Um código aleatório de recuperação é exibido uma única vez no cadastro. O banco armazena somente seu SHA-256. Guarde-o fora do aplicativo; se for perdido, não será possível recuperar a conta apenas com o e-mail.
-- O código é de uso único. Ao redefinir a senha, o código anterior é invalidado, outro código é exibido e as sessões existentes são invalidadas.
-- Cookies de sessão são HTTP-only, `SameSite=Lax` e `Secure` no Vercel. A duração da sessão é de sete dias.
-- Formulários protegidos por CSRF usam token de sessão; páginas de cadastro e recuperação não são armazenadas em cache e usam política `same-origin`, necessária para enviar o `Referer` nas requisições HTTPS do mesmo domínio sem compartilhá-lo com outros sites.
-- O `user_id` é obtido da sessão no servidor. Consultas e gravações de dados privados são restringidas ao usuário autenticado.
-- Exportações e arquivos CSV podem conter informações financeiras: armazene-os e compartilhe-os com cuidado.
-- O schema cria a estrutura de metas, mas não há ainda gerenciamento de metas na interface/API.
-- O schema antigo pode conter identidades de login anteriores sem credencial de senha. A aplicação não associa automaticamente essas contas ao cadastro por e-mail; faça uma migração de identidade explícita e segura antes de reutilizar dados antigos.
-- A inicialização atual aplica ajustes compatíveis para algumas estruturas legadas; não substitui um sistema formal de migrações versionadas para mudanças futuras de schema.
-- A biblioteca Chart.js é carregada por CDN; a conexão à internet é necessária para exibir e baixar os gráficos gerados pelo navegador.
+- `app.py` como ponto de entrada Flask.
+- Vercel para hospedagem serverless.
+- Neon PostgreSQL como banco de produção.
+- `DATABASE_URL` para conexão com o banco.
+- `SECRET_KEY` para assinatura das sessões.
+- Inicialização do schema e das categorias pela aplicação.
+
+### Considerações de implantação
+
+O filesystem das funções serverless da Vercel não deve ser tratado como armazenamento persistente. Por isso, o SQLite é destinado ao ambiente local e aos testes, enquanto o PostgreSQL é utilizado em produção.
+
+O endpoint `/api/health` permite verificar se a aplicação está respondendo:
+
+```text
+https://finance-flow-gt3d.vercel.app/api/health
+```
+
+O deploy não migra automaticamente dados de um banco SQLite local para o PostgreSQL. Essa migração exige um processo explícito de transferência e validação.
+
+O schema atual possui inicialização e ajustes compatíveis com algumas estruturas legadas, mas ainda não utiliza um sistema formal de migrações versionadas.
+
+## Limitações conhecidas e evolução
+
+- O schema contém a tabela `goals`, mas a interface e as operações da API para gerenciamento de metas ainda não foram implementadas.
+- O cadastro não verifica a posse do endereço de e-mail.
+- O código de recuperação é exibido uma única vez e precisa ser guardado fora da aplicação.
+- Estruturas legadas de identidade podem exigir migração explícita antes da reutilização de contas antigas.
+- A inicialização do schema ainda não substitui um sistema formal de migrações.
+- Os gráficos dependem do carregamento da biblioteca Chart.js por CDN, exigindo conexão à internet para sua visualização.
+- A aplicação ainda pode evoluir com monitoramento, observabilidade, rotinas de backup, migrações versionadas e melhorias adicionais de automação e processamento.
+
+Esses pontos representam oportunidades concretas de evolução técnica do produto.
 
 ## Licença
 
-Nenhuma licença de distribuição foi definida neste repositório. Defina uma licença antes de redistribuir o projeto como software open source.
+Nenhuma licença de distribuição foi definida neste repositório. Uma licença deverá ser escolhida antes de redistribuir o projeto como software de código aberto.
