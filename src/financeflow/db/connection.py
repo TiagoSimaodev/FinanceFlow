@@ -39,6 +39,7 @@ class _ConnectionAdapter:
     def executemany(self, query: str, parameters):
         if self._is_postgres:
             query = re.sub(r"\?", "%s", query)
+            return self._connection.cursor().executemany(query, parameters)
         return self._connection.executemany(query, parameters)
 
     def executescript(self, script: str):

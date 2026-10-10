@@ -2,10 +2,14 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from financeflow import create_app
-from financeflow.db.connection import database_connection, initialize_database
+from financeflow.db.connection import (
+    _ConnectionAdapter,
+    database_connection,
+    initialize_database,
+)
 
 
 class DatabaseInitializationTests(unittest.TestCase):
@@ -68,6 +72,23 @@ class DatabaseInitializationTests(unittest.TestCase):
             "Cartão de crédito", [category["name"] for category in categories]
         )
         self.assertIn("Streaming", [category["name"] for category in categories])
+
+    def test_postgresql_executemany_uses_cursor_and_converts_placeholders(self):
+        raw_connection = MagicMock()
+        cursor = raw_connection.cursor.return_value
+        adapter = _ConnectionAdapter(raw_connection, is_postgres=True)
+        parameters = (("Água", "despesa"), ("Salário", "receita"))
+
+        adapter.executemany(
+            "INSERT INTO categories (name, type) VALUES (?, ?)",
+            parameters,
+        )
+
+        raw_connection.cursor.assert_called_once_with()
+        cursor.executemany.assert_called_once_with(
+            "INSERT INTO categories (name, type) VALUES (%s, %s)",
+            parameters,
+        )
 
     def test_database_enforces_amount_category_and_date_constraints(self):
         initialize_database(self.database_path)

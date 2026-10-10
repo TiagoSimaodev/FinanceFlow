@@ -1,4 +1,4 @@
-# FinanceFlow
+gi# FinanceFlow
 
 Aplicação web de finanças pessoais para registrar receitas e despesas, importar extratos CSV, acompanhar indicadores e visualizar a evolução financeira. O projeto foi estruturado para execução local com SQLite e implantação serverless no Vercel com PostgreSQL.
 
