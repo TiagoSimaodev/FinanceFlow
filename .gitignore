@@ -1,0 +1,9 @@
+.venv/
+.vercel/
+instance/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+src/financeflow.egg-info/

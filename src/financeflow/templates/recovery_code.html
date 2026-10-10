@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7f4">
+    <title>Código de recuperação | FinanceFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <main class="auth-shell">
+      <section class="panel auth-panel" aria-labelledby="recovery-title">
+        <a class="brand auth-brand" href="/" aria-label="FinanceFlow, início">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>Finance<span class="brand-accent">Flow</span></span>
+        </a>
+        <p class="eyebrow">GUARDE EM LOCAL SEGURO</p>
+        <h1 id="recovery-title">Seu código de recuperação</h1>
+        {% if notice %}
+          <p class="form-feedback success" role="status">{{ notice }}</p>
+        {% endif %}
+        <p class="intro-copy">
+          Este código é exibido uma única vez. Guarde-o fora do FinanceFlow.
+          Sem ele, não será possível redefinir a senha.
+        </p>
+        <div class="recovery-code" aria-label="Código de recuperação">
+          <code>{{ recovery_code }}</code>
+        </div>
+        <p class="auth-privacy">
+          O FinanceFlow armazena apenas uma versão protegida do código, não este texto.
+          {% if notice %}O código anterior foi invalidado.{% endif %}
+        </p>
+        <a class="button button-primary" href="{{ url_for('index') }}">Continuar para o FinanceFlow</a>
+      </section>
+    </main>
+  </body>
+</html>

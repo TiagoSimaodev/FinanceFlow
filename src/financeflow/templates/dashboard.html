@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#f5f7f4">
+    <title>Dashboard | FinanceFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" defer></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+  </head>
+  <body>
+    <main class="page-shell dashboard-shell">
+      <header class="page-header">
+        <a class="brand" href="/" aria-label="FinanceFlow, início">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>Finance<span class="brand-accent">Flow</span></span>
+        </a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a class="nav-link active" href="/">Dashboard</a>
+          <a class="nav-link" href="/transactions">Movimentações</a>
+          <a class="nav-link" href="/imports">Importar CSV</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+          <span class="theme-icon" aria-hidden="true">☾</span>
+          <span data-theme-label>Modo escuro</span>
+        </button>
+        <div class="account-menu">
+          <span class="account-email">{{ g.current_user.email }}</span>
+          <form action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-small button-secondary" type="submit">Sair</button>
+          </form>
+        </div>
+      </header>
+
+      <section class="intro dashboard-intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">VISÃO GERAL</p>
+          <h1 id="page-title">Seu dinheiro, em perspectiva.</h1>
+          <p class="intro-copy">Acompanhe receitas, despesas e seus hábitos financeiros.</p>
+        </div>
+        <div class="dashboard-controls">
+          <div class="month-control">
+            <label for="dashboard-month">Período</label>
+            <input id="dashboard-month" type="month">
+          </div>
+          <div class="month-control">
+            <label for="dashboard-type">Tipo nos gráficos</label>
+            <select id="dashboard-type">
+              <option value="">Receitas e despesas</option>
+              <option value="receita">Entradas</option>
+              <option value="despesa">Saídas</option>
+            </select>
+          </div>
+          <div class="month-control">
+            <label for="dashboard-category">Categoria nos gráficos</label>
+            <select id="dashboard-category">
+              <option value="">Todas as categorias</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <p class="dashboard-feedback" id="dashboard-feedback" role="status" aria-live="polite"></p>
+      <div class="export-controls" aria-label="Baixar dados do período">
+        <button class="button button-secondary" type="button" data-export-format="csv" disabled>
+          Baixar CSV
+        </button>
+        <button class="button button-secondary" type="button" data-export-format="xlsx" disabled>
+          Baixar Excel
+        </button>
+      </div>
+
+      <section class="metric-grid" aria-label="Indicadores financeiros do mês">
+        <article class="metric-card">
+          <div class="metric-top"><span>Receitas</span><span class="metric-icon income-icon" aria-hidden="true">↗</span></div>
+          <p class="metric-value" id="total-income">—</p>
+          <p class="metric-caption">Total recebido no período</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span>Despesas</span><span class="metric-icon expense-icon" aria-hidden="true">↘</span></div>
+          <p class="metric-value" id="total-expenses">—</p>
+          <p class="metric-caption">Total gasto no período</p>
+        </article>
+        <article class="metric-card balance-card">
+          <div class="metric-top"><span>Saldo do período</span><span class="metric-icon balance-icon" aria-hidden="true">＝</span></div>
+          <p class="metric-value" id="total-balance">—</p>
+          <p class="metric-caption">Receitas menos despesas</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span>Economia</span><span class="metric-icon saving-icon" aria-hidden="true">◒</span></div>
+          <p class="metric-value" id="savings-rate">—</p>
+          <p class="metric-caption">Do total da receita</p>
+        </article>
+      </section>
+
+      <section class="chart-grid" aria-label="Gráficos financeiros">
+        <article class="panel chart-panel chart-panel-wide">
+          <div class="chart-heading">
+            <div>
+              <p class="eyebrow">ÚLTIMOS SEIS MESES</p>
+              <h2>Receitas e despesas</h2>
+            </div>
+            <div class="chart-actions">
+              <span class="chart-note">Valores em reais</span>
+              <button class="button button-small button-secondary" type="button"
+                      data-export-chart="monthly" aria-label="Baixar gráfico mensal como PNG">
+                Baixar gráfico
+              </button>
+            </div>
+          </div>
+          <div class="chart-canvas chart-canvas-monthly">
+            <canvas id="monthly-chart" role="img" aria-label="Gráfico mensal de receitas e despesas"></canvas>
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="chart-heading">
+            <div>
+              <p class="eyebrow">MÊS SELECIONADO</p>
+              <h2 id="category-chart-title">Despesas por categoria</h2>
+            </div>
+            <button class="button button-small button-secondary" type="button"
+                    data-export-chart="category" aria-label="Baixar gráfico por categoria como PNG">
+              Baixar gráfico
+            </button>
+          </div>
+          <div class="chart-canvas chart-canvas-category">
+            <canvas id="category-chart" role="img" aria-label="Gráfico de despesas por categoria"></canvas>
+          </div>
+          <p class="chart-empty" id="category-empty">Ainda não há despesas registradas neste período.</p>
+        </article>
+
+        <article class="panel chart-panel comparison-panel">
+          <div class="chart-heading">
+            <div>
+              <p class="eyebrow">COMPARATIVO MENSAL</p>
+              <h2>Como as despesas mudaram</h2>
+            </div>
+          </div>
+          <div class="comparison-summary">
+            <span id="expense-variation">—</span>
+            <span id="expense-comparison-caption">Em relação ao mês anterior</span>
+          </div>
+        </article>
+      </section>
+
+      <footer class="page-footer">FinanceFlow <span>·</span> Indicadores calculados a partir das suas movimentações</footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#f5f7f4">
+    <title>Movimentações | FinanceFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/transactions.js') }}" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="page-header">
+        <a class="brand" href="/" aria-label="FinanceFlow, início">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>Finance<span class="brand-accent">Flow</span></span>
+        </a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a class="nav-link" href="/">Dashboard</a>
+          <a class="nav-link active" href="/transactions">Movimentações</a>
+          <a class="nav-link" href="/imports">Importar CSV</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+          <span class="theme-icon" aria-hidden="true">☾</span>
+          <span data-theme-label>Modo escuro</span>
+        </button>
+        <div class="account-menu">
+          <span class="account-email">{{ g.current_user.email }}</span>
+          <form action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-small button-secondary" type="submit">Sair</button>
+          </form>
+        </div>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">FINANÇAS PESSOAIS</p>
+        <h1 id="page-title">Movimentações</h1>
+        <p class="intro-copy">Registre e acompanhe suas receitas e despesas.</p>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel form-panel" aria-labelledby="form-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">NOVO REGISTRO</p>
+              <h2 id="form-title">Adicionar movimentação</h2>
+            </div>
+            <span class="heading-icon" aria-hidden="true">＋</span>
+          </div>
+
+          <form id="transaction-form">
+            <fieldset class="type-field">
+              <legend>Tipo de movimentação</legend>
+              <div class="type-options">
+                <label class="type-option">
+                  <input type="radio" name="type" value="despesa" checked>
+                  <span>Despesa</span>
+                </label>
+                <label class="type-option">
+                  <input type="radio" name="type" value="receita">
+                  <span>Receita</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label for="amount">Valor</label>
+              <div class="amount-input">
+                <span aria-hidden="true">R$</span>
+                <input id="amount" name="amount" type="number" min="0.01" step="0.01"
+                       placeholder="0,00" inputmode="decimal" required>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="date">Data</label>
+                <input id="date" name="date" type="date" required>
+              </div>
+              <div class="field">
+                <label for="category">Categoria</label>
+                <select id="category" name="category_id" required>
+                  <option value="">Carregando...</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="description">Descrição <span class="optional">(opcional)</span></label>
+              <input id="description" name="description" type="text" maxlength="200"
+                     placeholder="Ex.: Conta de luz">
+            </div>
+
+            <p class="form-feedback" id="form-feedback" role="status" aria-live="polite"></p>
+            <button class="button button-primary" type="submit">Salvar movimentação</button>
+          </form>
+        </section>
+
+        <section class="panel history-panel" aria-labelledby="history-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SEUS REGISTROS</p>
+              <h2 id="history-title">Histórico</h2>
+            </div>
+            <span class="record-count" id="record-count">0 registros</span>
+          </div>
+
+          <form id="filters-form" class="filters">
+            <div class="filter-row">
+              <div class="field">
+                <label for="filter-start">De</label>
+                <input id="filter-start" name="start_date" type="date">
+              </div>
+              <div class="field">
+                <label for="filter-end">Até</label>
+                <input id="filter-end" name="end_date" type="date">
+              </div>
+            </div>
+            <div class="filter-row">
+              <div class="field">
+                <label for="filter-type">Tipo</label>
+                <select id="filter-type" name="type">
+                  <option value="">Todos</option>
+                  <option value="receita">Receitas</option>
+                  <option value="despesa">Despesas</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="filter-category">Categoria</label>
+                <select id="filter-category" name="category_id">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+            </div>
+            <button class="button button-secondary" type="submit">Aplicar filtros</button>
+          </form>
+
+          <p class="list-feedback" id="list-feedback" role="status" aria-live="polite"></p>
+          <ul class="transaction-list" id="transaction-list" aria-live="polite"></ul>
+        </section>
+      </section>
+      <footer class="page-footer">FinanceFlow <span>·</span> Etapa inicial do seu controle financeiro</footer>
+    </main>
+  </body>
+</html>

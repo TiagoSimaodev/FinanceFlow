@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#f5f7f4">
+    <title>Importar CSV | FinanceFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/imports.js') }}" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="page-header">
+        <a class="brand" href="/" aria-label="FinanceFlow, início">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>Finance<span class="brand-accent">Flow</span></span>
+        </a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a class="nav-link" href="/">Dashboard</a>
+          <a class="nav-link" href="/transactions">Movimentações</a>
+          <a class="nav-link active" href="/imports">Importar CSV</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+          <span class="theme-icon" aria-hidden="true">☾</span>
+          <span data-theme-label>Modo escuro</span>
+        </button>
+        <div class="account-menu">
+          <span class="account-email">{{ g.current_user.email }}</span>
+          <form action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-small button-secondary" type="submit">Sair</button>
+          </form>
+        </div>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">PIPELINE DE DADOS</p>
+        <h1 id="page-title">Importar movimentações</h1>
+        <p class="intro-copy">Envie um CSV para validar e carregar registros no FinanceFlow.</p>
+      </section>
+
+      <section class="import-layout">
+        <section class="panel import-panel" aria-labelledby="upload-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">EXTRAIR · VALIDAR · CARREGAR</p>
+              <h2 id="upload-title">Arquivo CSV</h2>
+            </div>
+            <span class="heading-icon" aria-hidden="true">⇧</span>
+          </div>
+          <form id="import-form">
+            <div class="field">
+              <label for="import-period-type">Período da importação</label>
+              <select id="import-period-type" name="period_type" required>
+                <option value="month">Um mês</option>
+                <option value="year">Um ano</option>
+              </select>
+            </div>
+            <div class="field" id="import-month-field">
+              <label for="import-month">Mês</label>
+              <input id="import-month" name="month_period" type="month" required>
+            </div>
+            <div class="field" id="import-year-field" hidden>
+              <label for="import-year">Ano</label>
+              <input id="import-year" name="year_period" type="number" min="1900"
+                     step="1" required disabled>
+            </div>
+            <div class="file-drop">
+              <span class="file-icon" aria-hidden="true">CSV</span>
+              <label for="csv-file">Selecione um arquivo CSV</label>
+              <span class="file-hint">UTF-8 · até {{ config["CSV_MAX_FILE_SIZE_BYTES"] // (1024 * 1024) }} MB · delimitador detectado automaticamente</span>
+              <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required>
+            </div>
+            <p class="form-feedback" id="import-feedback" role="status" aria-live="polite"></p>
+            <button class="button button-primary" id="import-submit" type="submit">Validar e importar</button>
+          </form>
+          <div class="template-actions" aria-label="Baixar modelo CSV">
+            <button class="button button-secondary" id="download-month-template" type="button">
+              Baixar modelo do mês
+            </button>
+            <button class="button button-secondary" id="download-year-template" type="button">
+              Baixar modelo do ano
+            </button>
+          </div>
+
+          <details class="csv-format">
+            <summary>Formato esperado do arquivo</summary>
+            <p>O modelo baixa somente o cabeçalho. Preencha uma linha por movimentação: <code>tipo</code> indica o que entrou (<code>receita</code>) ou saiu (<code>despesa</code>), <code>categoria</code> identifica salário ou a categoria do gasto, e <code>descricao</code> registra o nome ou detalhe do lançamento.</p>
+            <pre>data;tipo;valor;categoria;descricao
+10/10/2026;despesa;42,90;Alimentação;Almoço
+10/10/2026;receita;3500,00;Salário;Pagamento</pre>
+            <p>Colunas obrigatórias: <code>data</code>, <code>tipo</code>, <code>valor</code>, <code>categoria</code>. Datas aceitam <code>AAAA-MM-DD</code> ou <code>DD/MM/AAAA</code>; valores aceitam vírgula decimal brasileira ou ponto decimal. Linhas fora do mês/ano escolhido ficam rejeitadas com o motivo registrado.</p>
+          </details>
+        </section>
+
+        <section class="panel import-history-panel" aria-labelledby="imports-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">RASTREABILIDADE</p>
+              <h2 id="imports-title">Histórico de importações</h2>
+            </div>
+            <button class="button button-small button-secondary" id="refresh-imports" type="button">Atualizar</button>
+          </div>
+          <p class="list-feedback" id="history-feedback" role="status" aria-live="polite"></p>
+          <div class="import-table-wrap">
+            <table class="import-table">
+              <thead>
+                <tr>
+                  <th scope="col">Arquivo / início</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Processadas</th>
+                  <th scope="col">Aceitas</th>
+                  <th scope="col">Rejeitadas</th>
+                  <th scope="col">Duração</th>
+                  <th scope="col">Detalhes</th>
+                </tr>
+              </thead>
+              <tbody id="import-history">
+                <tr><td colspan="7" class="table-empty">Carregando histórico...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <section class="rejection-panel" id="rejection-panel" hidden aria-live="polite">
+            <div class="rejection-heading">
+              <h3>Registros rejeitados</h3>
+              <button class="text-button" id="close-rejections" type="button">Fechar</button>
+            </div>
+            <ul id="rejection-list" class="rejection-list"></ul>
+          </section>
+        </section>
+      </section>
+      <footer class="page-footer">FinanceFlow <span>·</span> Linhas rejeitadas permanecem registradas para revisão</footer>
+    </main>
+  </body>
+</html>

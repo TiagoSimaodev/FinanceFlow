@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7f4">
+    <title>Entrar | FinanceFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <main class="auth-shell">
+      <section class="panel auth-panel" aria-labelledby="login-title">
+        <a class="brand auth-brand" href="/" aria-label="FinanceFlow, início">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>Finance<span class="brand-accent">Flow</span></span>
+        </a>
+        <p class="eyebrow">SEU CONTROLE FINANCEIRO</p>
+        <h1 id="login-title">Entre para continuar</h1>
+        <p class="intro-copy">Acesse suas movimentações com seu e-mail e senha.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <p class="form-feedback {{ 'error' if category == 'error' else 'success' }}"
+               role="status">{{ message }}</p>
+          {% endfor %}
+        {% endwith %}
+
+        <form class="auth-form" method="post" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" autocomplete="email"
+                   maxlength="254" required>
+          </div>
+          <div class="field">
+            <label for="password">Senha</label>
+            <input id="password" name="password" type="password"
+                   autocomplete="current-password" required>
+          </div>
+          <p class="auth-privacy"><a href="{{ url_for('auth.forgot_password') }}">Esqueci minha senha</a></p>
+          <button class="button button-primary" type="submit">Entrar</button>
+        </form>
+        <p class="auth-privacy">Ainda não tem conta? <a href="{{ url_for('auth.register') }}">Criar conta</a></p>
+        <p class="auth-privacy">
+          A recuperação exige o código mostrado ao criar a conta.
+          Suas movimentações ficam separadas por conta.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
