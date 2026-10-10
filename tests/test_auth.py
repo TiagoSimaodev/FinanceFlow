@@ -130,6 +130,43 @@ class AuthenticationTests(unittest.TestCase):
         self.assertEqual(invalid_email.status_code, 400)
         self.assertEqual(weak_password.status_code, 400)
 
+    def test_https_registration_allows_same_origin_csrf_referer(self):
+        csrf_app = create_app(
+            {
+                "TESTING": True,
+                "DATABASE_PATH": self.database_path,
+                "SECRET_KEY": "test-secret",
+                "SESSION_COOKIE_SECURE": True,
+                "WTF_CSRF_ENABLED": True,
+            }
+        )
+        client = csrf_app.test_client()
+        base_url = "https://financeflow.test"
+        page = client.get("/register", base_url=base_url)
+        forgot_page = client.get("/forgot-password", base_url=base_url)
+        csrf_token = re.search(
+            rb'name="csrf_token" value="([^"]+)"', page.data
+        ).group(1).decode()
+
+        response = client.post(
+            "/register",
+            base_url=base_url,
+            headers={"Referer": f"{base_url}/register"},
+            data={
+                "csrf_token": csrf_token,
+                "name": "HTTPS User",
+                "email": "https-user@example.com",
+                "password": "safe-password-123",
+            },
+        )
+
+        self.assertEqual(page.headers["Cache-Control"], "no-store")
+        self.assertEqual(page.headers["Referrer-Policy"], "same-origin")
+        self.assertEqual(forgot_page.headers["Cache-Control"], "no-store")
+        self.assertEqual(forgot_page.headers["Referrer-Policy"], "same-origin")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Seu código de recuperação", response.get_data(as_text=True))
+
     def test_registration_creates_account_and_shows_recovery_code_once(self):
         response = self.client.post(
             "/register",

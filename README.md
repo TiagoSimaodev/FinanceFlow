@@ -264,6 +264,7 @@ O `.vercelignore` exclui testes, ambiente virtual e banco local do pacote de dep
 - Um código aleatório de recuperação é exibido uma única vez no cadastro. O banco armazena somente seu SHA-256. Guarde-o fora do aplicativo; se for perdido, não será possível recuperar a conta apenas com o e-mail.
 - O código é de uso único. Ao redefinir a senha, o código anterior é invalidado, outro código é exibido e as sessões existentes são invalidadas.
 - Cookies de sessão são HTTP-only, `SameSite=Lax` e `Secure` no Vercel. A duração da sessão é de sete dias.
+- Formulários protegidos por CSRF usam token de sessão; páginas de cadastro e recuperação não são armazenadas em cache e usam política `same-origin`, necessária para enviar o `Referer` nas requisições HTTPS do mesmo domínio sem compartilhá-lo com outros sites.
 - O `user_id` é obtido da sessão no servidor. Consultas e gravações de dados privados são restringidas ao usuário autenticado.
 - Exportações e arquivos CSV podem conter informações financeiras: armazene-os e compartilhe-os com cuidado.
 - O schema cria a estrutura de metas, mas não há ainda gerenciamento de metas na interface/API.

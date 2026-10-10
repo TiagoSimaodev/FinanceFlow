@@ -126,7 +126,7 @@ def create_app(test_config=None):
     def prevent_token_page_caching(response):
         if request.endpoint in {"auth.register", "auth.forgot_password"}:
             response.headers["Cache-Control"] = "no-store"
-            response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["Referrer-Policy"] = "same-origin"
         return response
 
     app.register_blueprint(auth_blueprint)
